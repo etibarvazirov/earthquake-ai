@@ -161,7 +161,8 @@ def plot_signal(sig):
     fig, ax = plt.subplots(figsize=(4.5, 1.8))
 
     ax.plot(sig, color="#222222", linewidth=0.8)
-    ax.set_facecolor("#ffffff")
+    ax.set_facecolor("#eef6fb")
+
 
     ax.grid(True, linestyle="--", linewidth=0.4, color="#dddddd", alpha=0.6)
 

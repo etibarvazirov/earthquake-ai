@@ -13,93 +13,40 @@ st.set_page_config(page_title="Earthquake Early Warning AI System", layout="wide
 # ---------------------------------------------------------
 # GLOBAL CUSTOM CSS
 # ---------------------------------------------------------
+
 st.markdown("""
-<style>
+<div class='info-card'>
+    <div class='info-title'>🧠 Sistem necə işləyir?</div>
+    <div class='info-desc'>
+        <b>1️⃣ Anomaly Score</b>
+        <span class='tooltip'>ℹ️
+            <span class='tooltiptext'>
+            Dalğanın strukturundakı qeyri-adi dəyişikliklərin gücünü ölçür.<br>
+            0.0 → normal<br>
+            0.3 → orta<br>
+            0.7+ → güclü zəlzələ əlaməti
+            </span>
+        </span>
+        <br><br>
 
-:root {
-    --card-bg: #f5f5f7;
-    --text-main: #1a1a1a;
-    --border-main: #4B9CD3;
-}
+        <b>2️⃣ Magnitude Proqnozu</b>
+        <span class='tooltip'>ℹ️
+            <span class='tooltiptext'>
+            AI dalğadan magnitude proqnozu verir.
+            </span>
+        </span>
+        <br><br>
 
-body.dark-mode {
-    --card-bg: #2a2a2a;
-    --text-main: #f0f0f0;
-    --border-main: #5AB9EA;
-}
-
-/* Big Info Card */
-.info-card {
-    background-color: var(--card-bg);
-    padding: 18px;
-    border-radius: 10px;
-    border-left: 6px solid var(--border-main);
-    margin-bottom: 20px;
-    color: var(--text-main);
-}
-
-.info-title {
-    font-size: 22px;
-    font-weight: bold;
-}
-
-.info-desc {
-    font-size: 16px;
-    margin-left: 10px;
-    line-height: 1.5;
-}
-
-/* KPI Cards */
-.kpi-card {
-    background-color: var(--card-bg);
-    padding: 15px;
-    border-radius: 10px;
-    border: 2px solid var(--border-main);
-    text-align: center;
-    margin-bottom: 10px;
-}
-
-.kpi-value {
-    font-size: 26px;
-    font-weight: bold;
-}
-
-.kpi-title {
-    font-size: 16px;
-    opacity: 0.9;
-}
-
-/* Tooltip */
-.tooltip {
-    position: relative;
-    display: inline-block;
-    cursor: help;
-    color: #187bcd;
-}
-
-.tooltip .tooltiptext {
-    visibility: hidden;
-    width: 260px;
-    background-color: #444;
-    color: #fff;
-    text-align: left;
-    border-radius: 6px;
-    padding: 10px;
-    position: absolute;
-    z-index: 10;
-    bottom: 125%;
-    left: 50%;
-    margin-left: -130px;
-    opacity: 0;
-    transition: opacity 0.4s;
-}
-
-.tooltip:hover .tooltiptext {
-    visibility: visible;
-    opacity: 1;
-}
-
-</style>
+        <b>3️⃣ Zəlzələ Riski</b>
+        <span class='tooltip'>ℹ️
+            <span class='tooltiptext'>
+            🟢 Aşağı risk<br>
+            🟡 Orta risk<br>
+            🔴 Yüksək risk
+            </span>
+        </span>
+    </div>
+</div>
 """, unsafe_allow_html=True)
 
 

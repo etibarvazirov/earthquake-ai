@@ -4,75 +4,106 @@ import time
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 from quake_generator import generate_signal
+import tensorflow as tf
 
-st.set_page_config(page_title="Real-time Earthquake AI Platform", layout="wide")
+st.set_page_config(page_title="Earthquake AI", layout="wide")
 
-model = load_model("earthquake_ai.h5")
+# Load model safely
+model = tf.keras.models.load_model("earthquake_ai", compile=False)
 
-st.title("🌋 Real-time Earthquake AI Simulation Platform")
+st.title("🌋 Real-time Earthquake AI Simulation")
 
 mode = st.sidebar.selectbox("Mode seç:", ["Replay Mode", "Synthetic Mode"])
 
+# State for streaming
+if "running" not in st.session_state:
+    st.session_state.running = False
 
-# --- PLOT FUNKSIYASI ---
+# Stop stream when sliders change
+def stop_stream():
+    st.session_state.running = False
+
+st.sidebar.write("### Controls")
+
+
 def plot_signal(sig):
     fig, ax = plt.subplots(figsize=(6,3))
     ax.plot(sig)
     ax.set_ylim(-5,5)
-    ax.set_title("Live Seismic Signal")
     return fig
 
 
-# =======================================================
-# MODE 1 — REPLAY MODE (fixed: no rerun)
-# =======================================================
+# =====================================================
+# REPLAY MODE
+# =====================================================
 if mode == "Replay Mode":
-    st.header("📡 Real Earthquake Replay Mode")
-    slices = np.load("real_slices.npy")
 
-    speed = st.sidebar.slider("Stream Speed (sec)", 0.01, 0.3, 0.05)
+    slices = np.load("real_slices.npy").astype("float32")
+    slices = slices[:, :300]
 
-    # Containers
-    plot_container = st.empty()
-    score_container = st.empty()
+    speed = st.sidebar.slider("Speed", 0.01, 0.3, 0.05, on_change=stop_stream)
 
-    for frame in slices:
-        frame_r = frame.reshape(1, -1, 1)
-        pred = model.predict(frame_r)[0][0]
+    start_btn = st.button("▶ Start Replay")
+    stop_btn  = st.button("⏹ Stop")
 
-        with plot_container:
-            st.pyplot(plot_signal(frame))
+    if start_btn:
+        st.session_state.running = True
+    if stop_btn:
+        st.session_state.running = False
 
-        with score_container:
-            st.metric("Anomaly Score", f"{pred:.4f}")
+    plot_box = st.empty()
+    text_box = st.empty()
+
+    if st.session_state.running:
+        # One frame per rerun
+        idx = st.session_state.get("frame_idx", 0)
+
+        frame = slices[idx]
+        frame_r = frame.reshape(1, 300, 1)
+
+        pred = float(model.predict(frame_r, verbose=0)[0][0])
+
+        plot_box.pyplot(plot_signal(frame))
+        text_box.metric("Anomaly Score", f"{pred:.4f}")
+
+        # update index
+        st.session_state.frame_idx = (idx + 1) % len(slices)
 
         time.sleep(speed)
+        st.experimental_rerun()
+
+    else:
+        st.session_state.frame_idx = 0
 
 
-# =======================================================
-# MODE 2 — SYNTHETIC MODE (fixed: no rerun)
-# =======================================================
+
+# =====================================================
+# SYNTHETIC MODE
+# =====================================================
 else:
-    st.header("🧪 Synthetic Earthquake Generator")
+    mag = st.sidebar.slider("Magnitude", 3.0, 8.0, 5.0, on_change=stop_stream)
+    noise = st.sidebar.slider("Noise", 0.1, 2.0, 0.5, on_change=stop_stream)
+    speed = st.sidebar.slider("Speed", 0.01, 0.3, 0.05, on_change=stop_stream)
 
-    mag = st.sidebar.slider("Magnitude", 3.0, 8.0, 5.0)
-    noise = st.sidebar.slider("Noise Level", 0.1, 2.0, 0.5)
+    start_btn = st.button("▶ Start Synthetic Stream")
+    stop_btn  = st.button("⏹ Stop")
 
-    speed = st.sidebar.slider("Stream Speed (sec)", 0.01, 0.3, 0.05)
+    if start_btn:
+        st.session_state.running = True
+    if stop_btn:
+        st.session_state.running = False
 
-    # Containers
-    plot_container = st.empty()
-    score_container = st.empty()
+    plot_box = st.empty()
+    text_box = st.empty()
 
-    while True:
-        sig = generate_signal(mag=mag, noise_level=noise)
-        frame_r = sig.reshape(1, -1, 1)
-        pred = model.predict(frame_r)[0][0]
+    if st.session_state.running:
+        sig = generate_signal(mag=mag, noise_level=noise, length=300).astype("float32")
+        frame_r = sig.reshape(1, 300, 1)
 
-        with plot_container:
-            st.pyplot(plot_signal(sig))
+        pred = float(model.predict(frame_r, verbose=0)[0][0])
 
-        with score_container:
-            st.metric("Anomaly Score", f"{pred:.4f}")
+        plot_box.pyplot(plot_signal(sig))
+        text_box.metric("Anomaly Score", f"{pred:.4f}")
 
         time.sleep(speed)
+        st.experimental_rerun()

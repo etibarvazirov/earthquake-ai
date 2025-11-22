@@ -158,19 +158,17 @@ def risk_level(anomaly, mag):
 # -------------------------------------------------------------------
 
 def plot_signal(sig):
-    fig, ax = plt.subplots(figsize=(4.5, 2.2))
-    x = np.arange(len(sig))
+    fig, ax = plt.subplots(figsize=(4.8, 2))
 
-    # Glow effect
-    for lw, alpha in [(6, 0.15), (4, 0.25), (2, 0.35)]:
-        ax.plot(x, sig, color="#1f77b4", linewidth=lw, alpha=alpha)
+    ax.plot(sig, color="black", linewidth=1)
 
-    ax.plot(x, sig, color="#1f77b4", linewidth=1.4)
+    ax.set_facecolor("#ffffff")
+    ax.grid(True, color="#e8e8e8", linestyle="-", linewidth=0.3)
 
-    ax.set_facecolor("#f9f9f9")
-    ax.grid(True, color="#dddddd", linestyle="--", alpha=0.6)
-    ax.set_ylim(-5,5)
-    ax.set_title("Seysmik Dalğa (Glow Effect)", fontsize=11)
+    ax.set_ylim(-5, 5)
+    ax.set_title("Seismograph Output", fontsize=10)
+    ax.tick_params(labelsize=8)
+
     st.pyplot(fig)
 
 

@@ -1,109 +1,77 @@
 import streamlit as st
 import numpy as np
-import time
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 from quake_generator import generate_signal
-import tensorflow as tf
 
+# Page config
 st.set_page_config(page_title="Earthquake AI", layout="wide")
 
-# Load model safely
+# Load model
 model = load_model("earthquake_ai.h5", compile=False)
 
 st.title("🌋 Real-time Earthquake AI Simulation")
 
-mode = st.sidebar.selectbox("Mode seç:", ["Replay Mode", "Synthetic Mode"])
+mode = st.sidebar.selectbox("Mode", ["Replay Mode", "Synthetic Mode"])
 
-# State for streaming
-if "running" not in st.session_state:
-    st.session_state.running = False
+# Auto-refresh every N milliseconds (100ms = 0.1 sec)
+refresh_rate = 100  
 
-# Stop stream when sliders change
-def stop_stream():
-    st.session_state.running = False
+# Storage for index
+if "idx" not in st.session_state:
+    st.session_state.idx = 0
 
-st.sidebar.write("### Controls")
-
-
+# Plot helper
 def plot_signal(sig):
     fig, ax = plt.subplots(figsize=(6,3))
     ax.plot(sig)
     ax.set_ylim(-5,5)
-    return fig
+    st.pyplot(fig)
 
 
 # =====================================================
-# REPLAY MODE
+# REPLAY MODE (NO LOOPS, NO RERUN)
 # =====================================================
 if mode == "Replay Mode":
 
     slices = np.load("real_slices.npy").astype("float32")
     slices = slices[:, :300]
 
-    speed = st.sidebar.slider("Speed", 0.01, 0.3, 0.05, on_change=stop_stream)
+    speed = st.sidebar.slider("Speed", 10, 300, 100)  # ms
+    refresh_rate = speed
 
-    start_btn = st.button("▶ Start Replay")
-    stop_btn  = st.button("⏹ Stop")
+    # Auto-refresh
+    st_autorefresh = st.experimental_data_editor  # Placeholder fix
 
-    if start_btn:
-        st.session_state.running = True
-    if stop_btn:
-        st.session_state.running = False
+    st_autorefresh = st.autorefresh(interval=refresh_rate, limit=None)
 
-    plot_box = st.empty()
-    text_box = st.empty()
+    frame = slices[st.session_state.idx]
+    x = frame.reshape(1, 300, 1)
+    pred = float(model.predict(x, verbose=0)[0][0])
 
-    if st.session_state.running:
-        # One frame per rerun
-        idx = st.session_state.get("frame_idx", 0)
+    plot_signal(frame)
+    st.metric("Anomaly Score", f"{pred:.4f}")
 
-        frame = slices[idx]
-        frame_r = frame.reshape(1, 300, 1)
-
-        pred = float(model.predict(frame_r, verbose=0)[0][0])
-
-        plot_box.pyplot(plot_signal(frame))
-        text_box.metric("Anomaly Score", f"{pred:.4f}")
-
-        # update index
-        st.session_state.frame_idx = (idx + 1) % len(slices)
-
-        time.sleep(speed)
-        st.experimental_rerun()
-
-    else:
-        st.session_state.frame_idx = 0
+    # index update
+    st.session_state.idx = (st.session_state.idx + 1) % len(slices)
 
 
 
 # =====================================================
-# SYNTHETIC MODE
+# SYNTHETIC MODE (NO LOOPS, NO RERUN)
 # =====================================================
 else:
-    mag = st.sidebar.slider("Magnitude", 3.0, 8.0, 5.0, on_change=stop_stream)
-    noise = st.sidebar.slider("Noise", 0.1, 2.0, 0.5, on_change=stop_stream)
-    speed = st.sidebar.slider("Speed", 0.01, 0.3, 0.05, on_change=stop_stream)
+    mag = st.sidebar.slider("Magnitude", 3.0, 8.0, 5.0)
+    noise = st.sidebar.slider("Noise", 0.1, 2.0, 0.5)
+    speed = st.sidebar.slider("Speed", 10, 300, 100)  # ms
+    refresh_rate = speed
 
-    start_btn = st.button("▶ Start Synthetic Stream")
-    stop_btn  = st.button("⏹ Stop")
+    st.autorefresh(interval=refresh_rate, limit=None)
 
-    if start_btn:
-        st.session_state.running = True
-    if stop_btn:
-        st.session_state.running = False
+    sig = generate_signal(mag=mag, noise_level=noise, length=300).astype("float32")
 
-    plot_box = st.empty()
-    text_box = st.empty()
+    x = sig.reshape(1, 300, 1)
+    pred = float(model.predict(x, verbose=0)[0][0])
 
-    if st.session_state.running:
-        sig = generate_signal(mag=mag, noise_level=noise, length=300).astype("float32")
-        frame_r = sig.reshape(1, 300, 1)
-
-        pred = float(model.predict(frame_r, verbose=0)[0][0])
-
-        plot_box.pyplot(plot_signal(sig))
-        text_box.metric("Anomaly Score", f"{pred:.4f}")
-
-        time.sleep(speed)
-        st.experimental_rerun()
+    plot_signal(sig)
+    st.metric("Anomaly Score", f"{pred:.4f}")

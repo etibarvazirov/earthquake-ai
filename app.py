@@ -157,16 +157,19 @@ def risk_level(anomaly, mag):
 # PLOTTER
 # -------------------------------------------------------------------
 
+from scipy.ndimage import gaussian_filter1d
+
 def plot_signal(sig):
-    fig, ax = plt.subplots(figsize=(4.8, 2))
+    smooth = gaussian_filter1d(sig, sigma=2)
 
-    ax.plot(sig, color="black", linewidth=1)
+    fig, ax = plt.subplots(figsize=(4.5, 2))
 
-    ax.set_facecolor("#ffffff")
-    ax.grid(True, color="#e8e8e8", linestyle="-", linewidth=0.3)
+    ax.plot(smooth, color="#0057e7", linewidth=2)
+    ax.set_facecolor("#fafafa")
+    ax.grid(False)
 
     ax.set_ylim(-5, 5)
-    ax.set_title("Seismograph Output", fontsize=10)
+    ax.set_title("Seysmik Dalğa (son 2 saniyə)", fontsize=10)
     ax.tick_params(labelsize=8)
 
     st.pyplot(fig)

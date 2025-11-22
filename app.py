@@ -4,80 +4,117 @@ import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 from quake_generator import generate_signal
 
-st.set_page_config(page_title="Earthquake AI", layout="wide")
-
-model = load_model("earthquake_ai.h5", compile=False)
+# ---------------------------------------------------------
+# PAGE CONFIG
+# ---------------------------------------------------------
+st.set_page_config(page_title="Earthquake Early Warning AI System", layout="wide")
 
 st.title("🌋 Earthquake Early Warning AI System")
 
-# State for frame counter
-if "i" not in st.session_state:
-    st.session_state.i = 0
 
-# Risk label
-def risk_label(score):
-    if score > 0.65:
-        return "🔴 Yüksək risk (zəlzələ ehtimalı artıb)"
-    elif score > 0.35:
-        return "🟡 Orta risk (dalğada narahatlıq var)"
+# ---------------------------------------------------------
+# LOAD MODELS
+# ---------------------------------------------------------
+@st.cache_resource
+def load_ai_models():
+    anomaly = load_model("anomaly_model.h5", compile=False)
+    magnitude = load_model("magnitude_model.h5", compile=False)
+    return anomaly, magnitude
+
+anomaly_model, magnitude_model = load_ai_models()
+
+
+# ---------------------------------------------------------
+# RISK ENGINE
+# ---------------------------------------------------------
+def risk_level(anomaly, mag):
+    if mag > 7 or anomaly > 0.75:
+        return "🔴 YÜKSƏK RİSK"
+    elif mag > 5 or anomaly > 0.45:
+        return "🟡 ORTA RİSK"
     else:
-        return "🟢 Aşağı risk (hər şey normaldır)"
+        return "🟢 AŞAĞI RİSK"
 
-# Plot function
+
+# ---------------------------------------------------------
+# PLOTTER
+# ---------------------------------------------------------
 def plot_signal(sig):
-    fig, ax = plt.subplots(figsize=(7,3))
+    fig, ax = plt.subplots(figsize=(6, 3))
     ax.plot(sig, color="black")
-    ax.set_ylim(-5,5)
-    ax.set_title("Seysmik dalğa")
+    ax.set_ylim(-5, 5)
+    ax.set_title("Seysmik dalğa (son 2 saniyə)")
     st.pyplot(fig)
 
-mode = st.sidebar.radio("Rejim seç:", ["Real data (Replay)", "Simulyasiya (Synthetic)"])
+
+# ---------------------------------------------------------
+# MODE SELECTION
+# ---------------------------------------------------------
+mode = st.sidebar.radio("Rejim seç:", ["Real-time Simulyasiya", "Statik göstərici"])
 
 
-# =====================================================
-# REAL DATA MODE
-# =====================================================
-if mode == "Real data (Replay)":
+# ---------------------------------------------------------
+# REAL-TIME SIMULATION
+# ---------------------------------------------------------
+if mode == "Real-time Simulyasiya":
 
-    slices = np.load("real_slices.npy").astype("float32")
-    slices = slices[:, :300]
+    st.sidebar.subheader("Parametrlər")
+    mag_input = st.sidebar.slider("Magnitude (təxmini güc)", 3.0, 8.0, 5.0)
+    noise_input = st.sidebar.slider("Səs-küy səviyyəsi", 0.1, 2.0, 0.5)
 
-    if st.button("Növbəti siqnalı göstər"):
-        st.session_state.i += 1
+    if st.button("Yeni siqnal yarat"):
+        sig = generate_signal(mag=mag_input, noise_level=noise_input)
+        st.session_state["last_sig"] = sig
 
-    frame = slices[st.session_state.i % len(slices)]
-    x = frame.reshape(1,300,1)
-    score = float(model.predict(x,verbose=0)[0][0])
+    # İlk açılışda siqnal yarat
+    if "last_sig" not in st.session_state:
+        st.session_state["last_sig"] = generate_signal(mag=5.0, noise_level=0.5)
 
-    st.subheader(f"Zəlzələ riski: {risk_label(score)}")
-    plot_signal(frame)
+    sig = st.session_state["last_sig"]
 
-    st.info(
-        "Bu modda sistem real seysmik məlumatların hər bir hissəsini ardıcıllıqla təhlil edir.\n"
-        "Hər dəfə 'Növbəti siqnalı göstər' düyməsinə basdıqda,\n"
-        "AI modeli yeni dalğanı analiz edir və risk səviyyəsini proqnozlaşdırır."
-    )
+    # Model input
+    X = sig.reshape(1, 300, 1)
 
+    # Predictions
+    anomaly = float(anomaly_model.predict(X, verbose=0)[0][0])
+    predicted_mag = float(magnitude_model.predict(X, verbose=0)[0][0])
 
-# =====================================================
-# SYNTHETIC MODE
-# =====================================================
-else:
-    mag = st.sidebar.slider("Süni dalğa gücü (Magnitude)", 3.0, 8.0, 5.0)
-    noise = st.sidebar.slider("Səs-küy səviyyəsi", 0.1, 2.0, 0.5)
+    # RISK estimation
+    risk = risk_level(anomaly, predicted_mag)
 
-    if st.button("Süni siqnal yarat"):
-        st.session_state.i += 1
+    # Show results
+    st.subheader(f"Zəlzələ riski: {risk}")
+    col1, col2 = st.columns(2)
 
-    sig = generate_signal(mag=mag, noise_level=noise, length=300).astype("float32")
-    x = sig.reshape(1,300,1)
-    score = float(model.predict(x, verbose=0)[0][0])
+    with col1:
+        st.metric("Anomaly Score", f"{anomaly:.3f}")
 
-    st.subheader(f"Zəlzələ riski: {risk_label(score)}")
+    with col2:
+        st.metric("AI Magnitude Proqnozu", f"{predicted_mag:.2f}")
+
     plot_signal(sig)
 
     st.info(
-        "Bu mod AI-nın davranışını yoxlamaq üçündür.\n"
-        "Magnitude və Noise səviyyəsini dəyişərək,\n"
-        "AI modelinin risk proqnozunun necə dəyişdiyini müşahidə edə bilərsiniz."
+        "Bu panel AI tərəfindən yaradılmış seysmik dalğaları analiz edir.\n"
+        "Model dalğanın strukturunu təhlil edərək həm **anomaliya dərəcəsini**, "
+        "həm də **təxmini magnitude-ni** proqnozlaşdırır."
     )
+
+
+# ---------------------------------------------------------
+# STATIC MODE
+# ---------------------------------------------------------
+else:
+    st.write("Bu rejimdə model yalnız göstərilən siqnala əsasən nəticə verir.")
+    sig = generate_signal(5.0, 0.5)
+    plot_signal(sig)
+
+    X = sig.reshape(1, 300, 1)
+
+    anomaly = float(anomaly_model.predict(X, verbose=0)[0][0])
+    predicted_mag = float(magnitude_model.predict(X, verbose=0)[0][0])
+    risk = risk_level(anomaly, predicted_mag)
+
+    st.subheader(f"Zəlzələ riski: {risk}")
+    st.metric("Anomaly Score", f"{anomaly:.3f}")
+    st.metric("Magnitude Proqnozu", f"{predicted_mag:.2f}")

@@ -15,6 +15,7 @@ st.set_page_config(
 
 st.title("🌋 Earthquake Early Warning AI System")
 
+
 # ---------------------------------------------------------------
 # LOAD MODELS
 # ---------------------------------------------------------------
@@ -42,11 +43,16 @@ def risk_level(anomaly, mag):
 def plot_signal(sig, return_fig=False):
     fig, ax = plt.subplots(figsize=(4.5, 2))
 
-    ax.set_facecolor("#eef6fb")  # Ice blue background
+    # Background
+    ax.set_facecolor("#eef6fb")
+
+    # Wave line
     ax.plot(sig, color="#1f77b4", linewidth=1.5)
 
+    # Grid
     ax.grid(True, color="#d0d7de", linestyle="--", linewidth=0.5, alpha=0.6)
 
+    # Limits & axes styling
     ax.set_ylim(-5, 5)
     ax.tick_params(axis='both', labelsize=6, pad=2)
     ax.set_title("Seysmik Dalğa (son 2 saniyə)", fontsize=9)
@@ -57,25 +63,26 @@ def plot_signal(sig, return_fig=False):
         st.pyplot(fig)
 
 
-# -----------------------------------------------------------------------
-# SYSTEM EXPLANATION — MARKDOWN TABLE (NO HTML, FULLY SAFE IN STREAMLIT)
-# -----------------------------------------------------------------------
+# ---------------------------------------------------------------
+# SYSTEM EXPLANATION — Markdown Table
+# ---------------------------------------------------------------
 st.markdown("""
 ## 🧠 Sistem necə işləyir?
 
-| Komponent | İzahetmə |
-|----------|-----------|
-| **📈 Anomaly Score** | Dalğadakı qeyri-normal dəyişikliklərin gücünü ölçür. <br>• 0.0–0.3 → Normal <br>• 0.3–0.7 → Orta <br>• 0.7+ → Güclü zəlzələ əlaməti |
-| **🌋 Magnitude Proqnozu** | Dalğanın formasına əsasən AI-nin təxmini magnitude qiyməti (3–8). Real magnitude deyil — siqnaldan çıxan AI proqnozudur. |
-| **🔊 Noise (Səs-küy)** | Siqnala əlavə edilən təsadüfi dəyişikliklərdir. <br>• Noise ↑ → xaotik dalğa <br>• Noise ↓ → təmiz dalğa |
-| **📡 Real-Time Simulyasiya** | Parametrlər dəyişdikcə dalğa və AI nəticələri real vaxtda yenilənir. |
-| **🖼 Statik Göstərici** | Sabit dalğa göstərilir və AI nəticələri dəyişmir. |
-""", unsafe_allow_html=False)
+| Komponent | İzah |
+|----------|------|
+| **📈 Anomaly Score** | Dalğadakı qeyri-normal dəyişikliklərin gücünü ölçür. • 0.0–0.3 → Normal • 0.3–0.7 → Orta • 0.7+ → Güclü siqnal |
+| **🌋 Magnitude Proqnozu** | Dalğanın formasına əsasən AI-nin təxmini magnitude qiymətidir (3–8). |
+| **🔊 Noise (Səs-küy)** | Dalğaya təsadüfi dəyişikliklər əlavə edir. Noise ↑ olduqca dalğa daha xaotik olur. |
+| **📡 Real-Time Simulyasiya** | Parametrlər dəyişdikcə dalğa və AI nəticələri dərhal yenilənir. |
+| **🖼 Statik Göstərici** | Sabit dalğa göstərilir. Bu rejim modelin davranışını nümayiş etdirmək üçündür. |
+""")
 
 st.divider()
 
+
 # ---------------------------------------------------------------
-# PRESET FIX — ALWAYS RESPONSIVE
+# PRESET BUTTON HANDLING
 # ---------------------------------------------------------------
 if "preset" not in st.session_state:
     st.session_state["preset"] = None
@@ -85,7 +92,7 @@ def set_preset(p):
 
 
 # ---------------------------------------------------------------
-# MODE SELECTION
+# MODE SELECTOR
 # ---------------------------------------------------------------
 mode = st.sidebar.radio("Rejim seç:", ["Real-time Simulyasiya", "Statik Göstərici"])
 
@@ -96,7 +103,7 @@ mode = st.sidebar.radio("Rejim seç:", ["Real-time Simulyasiya", "Statik Göstə
 if mode == "Real-time Simulyasiya":
 
     # -----------------------------------------
-    # ⭐ PRESET BUTTONS NOW AT THE TOP HERE ⭐
+    # PRESET buttons at TOP
     # -----------------------------------------
     st.subheader("🧪 AI-ni sınağa çək")
 
@@ -113,7 +120,7 @@ if mode == "Real-time Simulyasiya":
     mag_input = st.slider("Magnitude", 3.0, 8.0, 5.0)
     noise_input = st.slider("Səs-küy (Noise)", 0.1, 2.0, 0.5)
 
-    # Apply preset BEFORE generating predictions
+    # PRESET override
     if st.session_state["preset"] == "weak":
         st.session_state["sig"] = generate_signal(4.0, 0.2)
     elif st.session_state["preset"] == "medium":
@@ -145,7 +152,11 @@ if mode == "Real-time Simulyasiya":
         st.metric("⚠️ Risk", risk)
 
     plot_signal(sig)
-    st.caption("Bu qrafik son 2 saniyəlik seysmik dalğanı göstərir. AI bu siqnaldan anomaliya və magnitude təxminini çıxarır.")
+
+    st.caption(
+        "Bu qrafik son 2 saniyəlik seysmik dalğanı göstərir. "
+        "AI bu siqnaldan anomaliya və magnitude təxminini çıxarır."
+    )
 
 
 # ---------------------------------------------------------------
@@ -153,6 +164,8 @@ if mode == "Real-time Simulyasiya":
 # ---------------------------------------------------------------
 else:
     st.header("📡 Statik Nümunə Dalğa")
+    st.info("Bu rejim sabit bir dalğa yaradır və AI nəticələri dəyişmir. "
+            "Məqsədi: modelin davranışını nümayiş etdirməkdir.")
 
     sig = generate_signal(5.0, 0.5)
     X = sig.reshape(1, 300, 1)
@@ -182,7 +195,10 @@ st.header("🔍 Noise təsirini vizual müqayisə et")
 
 colA, colB = st.columns(2)
 
-noise_test = st.slider("Noise dəyərini seç (vizual müqayisə üçün):", 0.1, 2.0, 0.5, 0.1)
+noise_test = st.slider(
+    "Noise dəyərini seç (vizual müqayisə üçün):",
+    0.1, 2.0, 0.5, 0.1
+)
 
 with colA:
     st.write("**Təmiz Dalğa (Noise = 0.1)**")
@@ -199,7 +215,7 @@ with colB:
 # SEISMOGRAPH REPLAY
 # ---------------------------------------------------------------
 st.divider()
-st.header("🎞 Seismograph Replay (5 saniyə)")
+st.header("🎞 Real-time Seismograph Replay")
 
 if st.button("▶ Başlat Replay"):
     placeholder = st.empty()

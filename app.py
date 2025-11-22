@@ -166,8 +166,8 @@ def plot_signal(sig):
     ax.grid(True, linestyle="--", linewidth=0.4, color="#dddddd", alpha=0.6)
 
     ax.set_ylim(-5, 5)
-    ax.set_title("Seysmik Dalğa (Raw View)", fontsize=10, color="#333333")
-    ax.tick_params(labelsize=8, colors="#444444")
+    ax.set_title("Seysmik Dalğa (2 saniyə)", fontsize=9, color="#333333")
+    ax.tick_params(axis='both', labelsize=5, pad=2)
 
     st.pyplot(fig)
 

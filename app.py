@@ -42,16 +42,11 @@ def risk_level(anomaly, mag):
 def plot_signal(sig, return_fig=False):
     fig, ax = plt.subplots(figsize=(4.5, 2))
 
-    # Ice blue background
-    ax.set_facecolor("#eef6fb")
-
-    # Wave line
+    ax.set_facecolor("#eef6fb")  # Ice blue background
     ax.plot(sig, color="#1f77b4", linewidth=1.5)
 
-    # Light grid
     ax.grid(True, color="#d0d7de", linestyle="--", linewidth=0.5, alpha=0.6)
 
-    # Axis limits
     ax.set_ylim(-5, 5)
     ax.tick_params(axis='both', labelsize=6, pad=2)
     ax.set_title("Seysmik Dalğa (son 2 saniyə)", fontsize=9)
@@ -63,52 +58,86 @@ def plot_signal(sig, return_fig=False):
 
 
 # ---------------------------------------------------------------
-# SYSTEM EXPLANATION
+# SYSTEM EXPLANATION TABLE
 # ---------------------------------------------------------------
 st.markdown("""
-## 🧠 Sistem necə işləyir?
+### 🧠 Sistem necə işləyir?
 
-Bu platforma seysmik dalğaları analiz edərək **zəlzələnin mümkün əlamətlərini** qiymətləndirən iki AI modelindən istifadə edir:
-
----
-
-### 🔸 1. **Anomaly Score**
-Dalğadakı qeyri-normal dəyişikliklərin gücünü ölçür.
-
-- **0.0 – 0.3 → Normal**
-- **0.3 – 0.7 → Orta anomaliya**
-- **0.7+ → Güclü zəlzələ əlaməti**
-
-AI bu göstəricini dalğanın sıçrayış, kəskin dəyişmə və ritm pozuntularından çıxarır.
-
----
-
-### 🔸 2. **Magnitude Proqnozu**
-AI dalğanın forması və amplitudasına baxaraq zəlzələnin təxmini gücünü proqnozlaşdırır (3.0–8.0 arası).
-
-Bu real magnitude deyil — **dalğanın özündən çıxan AI təxmindir**.
-
----
-
-### 🔸 3. **Səs-küy (Noise)**
-Siqnala əlavə edilən təsadüfi dəyişikliklərdir.
-
-- Noise ↑ → dalğa xaotik olur  
-- Noise ↓ → dalğa daha təmiz görünür  
-- Noise çox yüksəkdirsə → AI bəzən yalnış pozitiv verə bilər  
-
----
-
-### 🔸 4. **Rejimlər**
-
-#### 🟦 **Real-time Simulyasiya**
-Parametrləri dəyişdikcə dalğa yenidən yaradılır və AI nəticələri real vaxtda dəyişir.
-
-#### 🟧 **Statik Göstərici**
-Sabit dalğa nümunəsi göstərilir, nəticələr dəyişmir.
 """)
 
+st.markdown("""
+<style>
+.table-box {
+    background-color: #f5f7fa;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #d0d7de;
+}
+th {
+    background-color: #e2e8f0 !important;
+    color: #333 !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+}
+td {
+    color: #333 !important;
+    padding: 6px !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<div class="table-box">
+<table>
+    <tr>
+        <th>Komponent</th>
+        <th>İzah</th>
+    </tr>
+
+    <tr>
+        <td><b>📈 Anomaly Score</b></td>
+        <td>Dalğadakı qeyri-normal dəyişikliklərin gücünü ölçür.<br>
+            0.0–0.3 → Normal<br>
+            0.3–0.7 → Orta<br>
+            0.7+ → Güclü zəlzələ əlaməti</td>
+    </tr>
+
+    <tr>
+        <td><b>🌋 Magnitude Proqnozu</b></td>
+        <td>AI dalğanın formasından zəlzələnin gücünü təxmin edir (3–8 arası).<br>
+            Real magnitude deyil — siqnaldan çıxan AI proqnozudur.</td>
+    </tr>
+
+    <tr>
+        <td><b>🔊 Noise (Səs-küy)</b></td>
+        <td>Dalğaya əlavə edilən təsadüfi dəyişikliklərdir.<br>
+            Noise ↑ → daha xaotik dalğa<br>
+            Noise ↓ → daha təmiz dalğa</td>
+    </tr>
+
+    <tr>
+        <td><b>📡 Real-time Simulyasiya</b></td>
+        <td>Parametrlər dəyişdikcə dalğa yenilənir və AI nəticələri real vaxtda hesablanır.</td>
+    </tr>
+
+    <tr>
+        <td><b>🖼 Statik Göstərici</b></td>
+        <td>Sabit dalğa göstərilir və AI nəticələri dəyişmir. Təlim məqsədlidir.</td>
+    </tr>
+</table>
+</div>
+""", unsafe_allow_html=True)
+
 st.divider()
+
+# ---------------------------------------------------------------
+# PRESET FIX (FLAG-BASED)
+# ---------------------------------------------------------------
+if "preset" not in st.session_state:
+    st.session_state["preset"] = None
+
+def set_preset(p):
+    st.session_state["preset"] = p
 
 
 # ---------------------------------------------------------------
@@ -127,11 +156,20 @@ if mode == "Real-time Simulyasiya":
     mag_input = st.slider("Magnitude", 3.0, 8.0, 5.0)
     noise_input = st.slider("Səs-küy (Noise)", 0.1, 2.0, 0.5)
 
-    if st.button("Yeni dalğa yarat"):
-        st.session_state["sig"] = generate_signal(mag_input, noise_input)
+    # Apply preset BEFORE generating predictions
+    if st.session_state["preset"] == "weak":
+        st.session_state["sig"] = generate_signal(4.0, 0.2)
+    elif st.session_state["preset"] == "medium":
+        st.session_state["sig"] = generate_signal(5.5, 0.4)
+    elif st.session_state["preset"] == "strong":
+        st.session_state["sig"] = generate_signal(7.0, 0.7)
+    else:
+        if "sig" not in st.session_state:
+            st.session_state["sig"] = generate_signal(5.0, 0.5)
 
-    if "sig" not in st.session_state:
-        st.session_state["sig"] = generate_signal(5.0, 0.5)
+    if st.button("Yeni dalğa yarat"):
+        st.session_state["preset"] = None
+        st.session_state["sig"] = generate_signal(mag_input, noise_input)
 
     sig = st.session_state["sig"]
 
@@ -150,7 +188,6 @@ if mode == "Real-time Simulyasiya":
         st.metric("⚠️ Risk", risk)
 
     plot_signal(sig)
-
     st.caption("Bu qrafik son 2 saniyəlik seysmik dalğanı göstərir. AI bu siqnaldan anomaliya və magnitude təxminini çıxarır.")
 
 
@@ -202,21 +239,16 @@ with colB:
 
 
 # ---------------------------------------------------------------
-# AI PRESET TEST BUTTONS
+# AI PRESETS (NO DELAY NOW)
 # ---------------------------------------------------------------
 st.divider()
 st.header("🧪 AI-ni sınağa çək")
 
 colW, colM, colS = st.columns(3)
 
-if colW.button("🟢 Weak Quake"):
-    st.session_state["sig"] = generate_signal(4.0, 0.2)
-
-if colM.button("🟡 Medium Quake"):
-    st.session_state["sig"] = generate_signal(5.5, 0.4)
-
-if colS.button("🔴 Strong Quake"):
-    st.session_state["sig"] = generate_signal(7.0, 0.7)
+colW.button("🟢 Weak Quake", on_click=set_preset, args=("weak",))
+colM.button("🟡 Medium Quake", on_click=set_preset, args=("medium",))
+colS.button("🔴 Strong Quake", on_click=set_preset, args=("strong",))
 
 
 # ---------------------------------------------------------------

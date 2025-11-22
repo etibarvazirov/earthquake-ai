@@ -10,81 +10,74 @@ model = load_model("earthquake_ai.h5", compile=False)
 
 st.title("🌋 Earthquake Early Warning AI System")
 
-# Counter for frames
+# State for frame counter
 if "i" not in st.session_state:
     st.session_state.i = 0
 
-
-# -------- Risk conversion --------
-def risk_level(score):
+# Risk label
+def risk_label(score):
     if score > 0.65:
-        return "🔴 YÜKSƏK RİSK"
+        return "🔴 Yüksək risk (zəlzələ ehtimalı artıb)"
     elif score > 0.35:
-        return "🟡 ORTA RİSK"
+        return "🟡 Orta risk (dalğada narahatlıq var)"
     else:
-        return "🟢 AŞAĞI RİSK"
+        return "🟢 Aşağı risk (hər şey normaldır)"
 
-
-# -------- Plot helper --------
+# Plot function
 def plot_signal(sig):
     fig, ax = plt.subplots(figsize=(7,3))
     ax.plot(sig, color="black")
     ax.set_ylim(-5,5)
-    ax.set_title("Son 2 saniyəlik seysmik dalğa")
+    ax.set_title("Seysmik dalğa")
     st.pyplot(fig)
 
-
-# -------- Mode selection --------
-mode = st.sidebar.radio("Rejim seç", ["Replay (real data)", "Synthetic (AI simulyasiya)"])
+mode = st.sidebar.radio("Rejim seç:", ["Real data (Replay)", "Simulyasiya (Synthetic)"])
 
 
-# -------- Replay Mode --------
-if mode == "Replay (real data)":
+# =====================================================
+# REAL DATA MODE
+# =====================================================
+if mode == "Real data (Replay)":
 
     slices = np.load("real_slices.npy").astype("float32")
     slices = slices[:, :300]
 
-    # auto-refresh every 150ms
-    st.autorefresh(interval=150)
+    if st.button("Növbəti siqnalı göstər"):
+        st.session_state.i += 1
 
     frame = slices[st.session_state.i % len(slices)]
-    x = frame.reshape(1, 300, 1)
-    score = float(model.predict(x, verbose=0)[0][0])
+    x = frame.reshape(1,300,1)
+    score = float(model.predict(x,verbose=0)[0][0])
 
-    # RISK PANEL
-    st.subheader(f"Zəlzələ riski: {risk_level(score)}")
-
-    # GRAPH
+    st.subheader(f"Zəlzələ riski: {risk_label(score)}")
     plot_signal(frame)
 
-    # INFO
     st.info(
-        "Bu panel canlı seysmik dalğaları analiz edir.\n"
-        "AI modeli dalğadakı qeyri-adi dəyişiklikləri taparaq risk səviyyəsini proqnozlaşdırır.\n"
-        "Risk səviyyəsi anomaliya skoruna əsasən hesablanır."
+        "Bu modda sistem real seysmik məlumatların hər bir hissəsini ardıcıllıqla təhlil edir.\n"
+        "Hər dəfə 'Növbəti siqnalı göstər' düyməsinə basdıqda,\n"
+        "AI modeli yeni dalğanı analiz edir və risk səviyyəsini proqnozlaşdırır."
     )
 
-    st.session_state.i += 1
 
-
-# -------- Synthetic Mode --------
+# =====================================================
+# SYNTHETIC MODE
+# =====================================================
 else:
-    mag = st.sidebar.slider("Süni zəlzələ gücü (Magnitude)", 3.0, 8.0, 5.0)
-    noise = st.sidebar.slider("Səs-küy", 0.1, 2.0, 0.5)
+    mag = st.sidebar.slider("Süni dalğa gücü (Magnitude)", 3.0, 8.0, 5.0)
+    noise = st.sidebar.slider("Səs-küy səviyyəsi", 0.1, 2.0, 0.5)
 
-    st.autorefresh(interval=150)
+    if st.button("Süni siqnal yarat"):
+        st.session_state.i += 1
 
     sig = generate_signal(mag=mag, noise_level=noise, length=300).astype("float32")
-    x = sig.reshape(1, 300, 1)
+    x = sig.reshape(1,300,1)
     score = float(model.predict(x, verbose=0)[0][0])
 
-    # RISK PANEL
-    st.subheader(f"Zəlzələ riski: {risk_level(score)}")
-
-    # GRAPH
+    st.subheader(f"Zəlzələ riski: {risk_label(score)}")
     plot_signal(sig)
 
     st.info(
-        "Bu simulyasiya rejimində AI-ya süni seysmik dalğa verilir.\n"
-        "Dalğanın gücü (Magnitude) artırıldıqca risk səviyyəsi yüksəlir."
+        "Bu mod AI-nın davranışını yoxlamaq üçündür.\n"
+        "Magnitude və Noise səviyyəsini dəyişərək,\n"
+        "AI modelinin risk proqnozunun necə dəyişdiyini müşahidə edə bilərsiniz."
     )

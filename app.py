@@ -9,7 +9,7 @@ import tensorflow as tf
 st.set_page_config(page_title="Earthquake AI", layout="wide")
 
 # Load model safely
-model = tf.keras.models.load_model("earthquake_ai", compile=False)
+model = load_model("earthquake_ai.h5", compile=False)
 
 st.title("🌋 Real-time Earthquake AI Simulation")
 

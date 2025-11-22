@@ -1,8 +1,4 @@
-streamlit
+tensorflow==2.15.0
 numpy
+streamlit
 matplotlib
-tensorflow
-obspy
-
-
-

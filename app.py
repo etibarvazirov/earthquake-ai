@@ -57,81 +57,25 @@ def plot_signal(sig, return_fig=False):
         st.pyplot(fig)
 
 
-# ---------------------------------------------------------------
-# SYSTEM EXPLANATION TABLE
-# ---------------------------------------------------------------
+# -----------------------------------------------------------------------
+# SYSTEM EXPLANATION — MARKDOWN TABLE (NO HTML, FULLY SAFE IN STREAMLIT)
+# -----------------------------------------------------------------------
 st.markdown("""
-### 🧠 Sistem necə işləyir?
+## 🧠 Sistem necə işləyir?
 
-""")
-
-st.markdown("""
-<style>
-.table-box {
-    background-color: #f5f7fa;
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid #d0d7de;
-}
-th {
-    background-color: #e2e8f0 !important;
-    color: #333 !important;
-    font-weight: 700 !important;
-    text-align: center !important;
-}
-td {
-    color: #333 !important;
-    padding: 6px !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<div class="table-box">
-<table>
-    <tr>
-        <th>Komponent</th>
-        <th>İzah</th>
-    </tr>
-
-    <tr>
-        <td><b>📈 Anomaly Score</b></td>
-        <td>Dalğadakı qeyri-normal dəyişikliklərin gücünü ölçür.<br>
-            0.0–0.3 → Normal<br>
-            0.3–0.7 → Orta<br>
-            0.7+ → Güclü zəlzələ əlaməti</td>
-    </tr>
-
-    <tr>
-        <td><b>🌋 Magnitude Proqnozu</b></td>
-        <td>AI dalğanın formasından zəlzələnin gücünü təxmin edir (3–8 arası).<br>
-            Real magnitude deyil — siqnaldan çıxan AI proqnozudur.</td>
-    </tr>
-
-    <tr>
-        <td><b>🔊 Noise (Səs-küy)</b></td>
-        <td>Dalğaya əlavə edilən təsadüfi dəyişikliklərdir.<br>
-            Noise ↑ → daha xaotik dalğa<br>
-            Noise ↓ → daha təmiz dalğa</td>
-    </tr>
-
-    <tr>
-        <td><b>📡 Real-time Simulyasiya</b></td>
-        <td>Parametrlər dəyişdikcə dalğa yenilənir və AI nəticələri real vaxtda hesablanır.</td>
-    </tr>
-
-    <tr>
-        <td><b>🖼 Statik Göstərici</b></td>
-        <td>Sabit dalğa göstərilir və AI nəticələri dəyişmir. Təlim məqsədlidir.</td>
-    </tr>
-</table>
-</div>
-""", unsafe_allow_html=True)
+| Komponent | İzahetmə |
+|----------|-----------|
+| **📈 Anomaly Score** | Dalğadakı qeyri-normal dəyişikliklərin gücünü ölçür. <br>• 0.0–0.3 → Normal <br>• 0.3–0.7 → Orta <br>• 0.7+ → Güclü zəlzələ əlaməti |
+| **🌋 Magnitude Proqnozu** | Dalğanın formasına əsasən AI-nin təxmini magnitude qiyməti (3–8). Real magnitude deyil — siqnaldan çıxan AI proqnozudur. |
+| **🔊 Noise (Səs-küy)** | Siqnala əlavə edilən təsadüfi dəyişikliklərdir. <br>• Noise ↑ → xaotik dalğa <br>• Noise ↓ → təmiz dalğa |
+| **📡 Real-Time Simulyasiya** | Parametrlər dəyişdikcə dalğa və AI nəticələri real vaxtda yenilənir. |
+| **🖼 Statik Göstərici** | Sabit dalğa göstərilir və AI nəticələri dəyişmir. |
+""", unsafe_allow_html=False)
 
 st.divider()
 
 # ---------------------------------------------------------------
-# PRESET FIX (FLAG-BASED)
+# PRESET FIX — ALWAYS RESPONSIVE
 # ---------------------------------------------------------------
 if "preset" not in st.session_state:
     st.session_state["preset"] = None
@@ -150,6 +94,19 @@ mode = st.sidebar.radio("Rejim seç:", ["Real-time Simulyasiya", "Statik Göstə
 # REAL-TIME MODE
 # ---------------------------------------------------------------
 if mode == "Real-time Simulyasiya":
+
+    # -----------------------------------------
+    # ⭐ PRESET BUTTONS NOW AT THE TOP HERE ⭐
+    # -----------------------------------------
+    st.subheader("🧪 AI-ni sınağa çək")
+
+    colW, colM, colS = st.columns(3)
+
+    colW.button("🟢 Weak Quake", on_click=set_preset, args=("weak",))
+    colM.button("🟡 Medium Quake", on_click=set_preset, args=("medium",))
+    colS.button("🔴 Strong Quake", on_click=set_preset, args=("strong",))
+
+    st.write("")  # spacing
 
     st.header("⚙️ Parametrlər")
 
@@ -236,19 +193,6 @@ with colB:
     st.write(f"**Səs-küylü Dalğa (Noise = {noise_test})**")
     noisy = generate_signal(5.0, noise_test)
     plot_signal(noisy)
-
-
-# ---------------------------------------------------------------
-# AI PRESETS (NO DELAY NOW)
-# ---------------------------------------------------------------
-st.divider()
-st.header("🧪 AI-ni sınağa çək")
-
-colW, colM, colS = st.columns(3)
-
-colW.button("🟢 Weak Quake", on_click=set_preset, args=("weak",))
-colM.button("🟡 Medium Quake", on_click=set_preset, args=("medium",))
-colS.button("🔴 Strong Quake", on_click=set_preset, args=("strong",))
 
 
 # ---------------------------------------------------------------

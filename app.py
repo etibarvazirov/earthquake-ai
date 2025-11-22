@@ -106,40 +106,30 @@ st.title("🌋 Earthquake Early Warning AI System")
 # -------------------------------------------------------------------
 # BIG INFO CARD
 # -------------------------------------------------------------------
-st.markdown("""<div class='info-card'>
-    <div class='info-title'>🧠 Sistem necə işləyir?</div>
+st.markdown("### 🧠 Sistem necə işləyir?")
+st.info(
+    """
+### 🔍 Sistem 3 əsas göstərici üzərindən işləyir:
 
-    <div class='info-desc'>
-        <b>1️⃣ Anomaly Score</b>
-        <span class='tooltip'>ℹ️
-            <span class='tooltiptext'>
-                Dalğadakı qeyri-adi dəyişikliklərin gücünü ölçür.<br>
-                0.0 → normal<br>
-                0.3 → orta<br>
-                0.7+ → güclü zəlzələ əlaməti
-            </span>
-        </span>
-        <br><br>
+#### 1️⃣ **Anomaly Score (Anomaliya göstəricisi)**
+- Seysmik dalğada qeyri-adi dəyişiklikləri ölçür  
+- **0.0 – 0.3** → 🟢 normal  
+- **0.3 – 0.7** → 🟡 orta anomaliya  
+- **0.7+** → 🔴 güclü zəlzələ əlaməti  
 
-        <b>2️⃣ Magnitude Proqnozu</b>
-        <span class='tooltip'>ℹ️
-            <span class='tooltiptext'>
-                AI dalğa formasına baxaraq təxmini magnitude proqnozu verir (3.0 – 8.0).
-            </span>
-        </span>
-        <br><br>
+#### 2️⃣ **Magnitude Proqnozu**
+- Model dalğanın gücünə baxaraq təxmini magnitude verir  
+- Tipik aralıq: **3.0 – 8.0**
 
-        <b>3️⃣ Zəlzələ Riski</b>
-        <span class='tooltip'>ℹ️
-            <span class='tooltiptext'>
-                Anomaly Score + Magnitude birlikdə analiz edilir:<br>
-                🟢 Aşağı risk<br>
-                🟡 Orta risk<br>
-                🔴 Yüksək risk
-            </span>
-        </span>
-    </div>
-</div>""", unsafe_allow_html=True)
+#### 3️⃣ **Zəlzələ Riski**
+- Anomaly Score + Magnitude birlikdə analiz edilərək hesablanır  
+- **Aşağı Risk** → 🟢  
+- **Orta Risk** → 🟡  
+- **Yüksək Risk** → 🔴  
+
+Bu panel real-time seysmik dalğanın AI tərəfindən təhlilini nümayiş etdirir.
+"""
+)
 
 # -------------------------------------------------------------------
 # LOAD MODELS (SAFE CACHE)

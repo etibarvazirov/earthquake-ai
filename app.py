@@ -157,7 +157,7 @@ def risk_level(anomaly, mag):
 # PLOTTER
 # -------------------------------------------------------------------
 def plot_signal(sig):
-    fig, ax = plt.subplots(figsize=(6,3))
+    fig, ax = plt.subplots(figsize=(4.5, 2))
     ax.plot(sig, color="black")
     ax.set_ylim(-5,5)
     ax.set_title("Seysmik dalğa (son 2 saniyə)")

@@ -4,12 +4,137 @@ import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 from quake_generator import generate_signal
 
+st.markdown("""
+<style>
+
+:root {
+    --card-bg: #f5f5f7;
+    --text-main: #1a1a1a;
+    --border-main: #4B9CD3;
+}
+
+body.dark-mode {
+    --card-bg: #2a2a2a;
+    --text-main: #f0f0f0;
+    --border-main: #5AB9EA;
+}
+
+.info-card {
+    background-color: var(--card-bg);
+    padding: 18px;
+    border-radius: 10px;
+    border-left: 6px solid var(--border-main);
+    margin-bottom: 20px;
+    color: var(--text-main);
+}
+
+.info-title {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.info-desc {
+    font-size: 16px;
+    margin-left: 10px;
+    line-height: 1.5;
+}
+
+/* Three KPI Cards */
+.kpi-card {
+    background-color: var(--card-bg);
+    padding: 15px;
+    border-radius: 10px;
+    border: 2px solid var(--border-main);
+    text-align: center;
+}
+
+.kpi-value {
+    font-size: 26px;
+    font-weight: bold;
+}
+
+.kpi-title {
+    font-size: 17px;
+    opacity: 0.9;
+}
+
+/* Tooltip */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+    color: #187bcd;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 280px;
+    background-color: #444;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 10px;
+    position: absolute;
+    z-index: 10;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -140px;
+    opacity: 0;
+    transition: opacity 0.4s;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
 # ---------------------------------------------------------
 # PAGE CONFIG
 # ---------------------------------------------------------
 st.set_page_config(page_title="Earthquake Early Warning AI System", layout="wide")
 
 st.title("🌋 Earthquake Early Warning AI System")
+
+
+st.markdown("""
+<div class='info-card'>
+    <div class='info-title'>🧠 Sistem necə işləyir?</div>
+    <div class='info-desc'>
+        Bu AI sistemi seysmik dalğaları analiz edib <b>üç əsas göstərici</b> çıxarır.<br><br>
+
+        <b>1️⃣ Anomaly Score</b> <span class='tooltip'>ℹ️
+            <span class='tooltiptext'>
+            Dalğanın strukturundakı qeyri-adi dəyişiklikləri ölçür.<br>
+            0.0 → normal dalğa<br>
+            0.3 → orta anomaliya<br>
+            0.7+ → güclü zəlzələ əlaməti
+            </span>
+        </span>
+        <br><br>
+
+        <b>2️⃣ Magnitude Proqnozu</b> <span class='tooltip'>ℹ️
+            <span class='tooltiptext'>
+            AI dalğanın gücünə baxaraq təxmini zəlzələ gücünü (3.0–8.0) proqnozlaşdırır.
+            </span>
+        </span>
+        <br><br>
+
+        <b>3️⃣ Zəlzələ Riski</b> <span class='tooltip'>ℹ️
+            <span class='tooltiptext'>
+            Anomaly Score və Magnitude birlikdə analiz edilərək yekun risk çıxarılır:<br>
+            🟢 Aşağı risk<br>
+            🟡 Orta risk<br>
+            🔴 Yüksək risk
+            </span>
+        </span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
 
 
 # ---------------------------------------------------------
@@ -45,6 +170,26 @@ def plot_signal(sig):
     ax.set_ylim(-5, 5)
     ax.set_title("Seysmik dalğa (son 2 saniyə)")
     st.pyplot(fig)
+
+
+with st.sidebar.expander("ℹ️ Bu panel nə edir?"):
+    st.write("""
+    Bu simulyasiya seysmik dalğaların AI tərəfindən təhlilini göstərir.
+
+    - Yeni dalğa → AI 2 model ilə analiz edir  
+    - Anomaly Score → qeyri-adi dəyişikliklərin gücü  
+    - Magnitude → dalğanın gücünün proqnozu  
+    - Risk → hər ikisinin birləşdirilmiş nəticəsi  
+
+    Bu sistem real-time seysmik monitorinqin tədris modelidir.
+    """)
+
+theme_choice = st.sidebar.radio("Tema:", ["Light", "Dark"])
+
+if theme_choice == "Dark":
+    st.markdown("<script>document.body.classList.add('dark-mode');</script>", unsafe_allow_html=True)
+else:
+    st.markdown("<script>document.body.classList.remove('dark-mode');</script>", unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------
@@ -83,22 +228,32 @@ if mode == "Real-time Simulyasiya":
     risk = risk_level(anomaly, predicted_mag)
 
     # Show results
-    st.subheader(f"Zəlzələ riski: {risk}")
-    col1, col2 = st.columns(2)
+    colA, colB, colC = st.columns(3)
 
-    with col1:
-        st.metric("Anomaly Score", f"{anomaly:.3f}")
+    with colA:
+        st.markdown(f"""
+        <div class='kpi-card'>
+            <div class='kpi-title'>Anomaly Score</div>
+            <div class='kpi-value'>{anomaly:.3f}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with colB:
+        st.markdown(f"""
+        <div class='kpi-card'>
+            <div class='kpi-title'>Magnitude Prediction</div>
+            <div class='kpi-value'>{predicted_mag:.2f}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with colC:
+        st.markdown(f"""
+        <div class='kpi-card'>
+            <div class='kpi-title'>Risk level</div>
+            <div class='kpi-value'>{risk}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    with col2:
-        st.metric("AI Magnitude Proqnozu", f"{predicted_mag:.2f}")
-
-    plot_signal(sig)
-
-    st.info(
-        "Bu panel AI tərəfindən yaradılmış seysmik dalğaları analiz edir.\n"
-        "Model dalğanın strukturunu təhlil edərək həm **anomaliya dərəcəsini**, "
-        "həm də **təxmini magnitude-ni** proqnozlaşdırır."
-    )
 
 
 # ---------------------------------------------------------
@@ -108,6 +263,7 @@ else:
     st.write("Bu rejimdə model yalnız göstərilən siqnala əsasən nəticə verir.")
     sig = generate_signal(5.0, 0.5)
     plot_signal(sig)
+    st.caption("Qrafik son 2 saniyəlik seysmik dalğanı göstərir. AI bu siqnaldan anomaliya və magnitude təxminini çıxarır.")
 
     X = sig.reshape(1, 300, 1)
 

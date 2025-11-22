@@ -157,19 +157,30 @@ def risk_level(anomaly, mag):
 # PLOTTER
 # -------------------------------------------------------------------
 def plot_signal(sig):
+    plt.style.use("ggplot")  # daha müasir stil
+
     fig, ax = plt.subplots(figsize=(4.5, 2.2))
-    x = np.arange(len(sig))
 
-    for i in range(len(sig)-1):
-        ax.plot(x[i:i+2], sig[i:i+2],
-                color=(0.2, 0.3, 0.8, 0.3 + 0.7*i/len(sig)),
-                linewidth=1.8)
-
+    # Arxa fonu yumşaq rəngdə et
     ax.set_facecolor("#f9f9f9")
+
+    # Xətti gözəl rəngdə çəkək (mavi-gradient tonu)
+    ax.plot(sig, color="#1f77b4", linewidth=1.8)
+
+    # Grid xəttləri zərif olsun
     ax.grid(True, linewidth=0.4, color="#cccccc", linestyle="--", alpha=0.7)
-    ax.set_ylim(-5,5)
-    ax.set_title("Seysmik Dalğa (Gradient Line)", fontsize=11)
+
+    # Y-limits
+    ax.set_ylim(-5, 5)
+
+    # Başlığı da gözəlləşdirək
+    ax.set_title("Seysmik Dalğa (son 2 saniyə)", fontsize=11, color="#333")
+
+    # X və Y oxlarını minimalist edək
+    ax.tick_params(colors="#444", labelsize=9)
+
     st.pyplot(fig)
+
 
 
 # -------------------------------------------------------------------

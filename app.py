@@ -106,8 +106,7 @@ st.title("🌋 Earthquake Early Warning AI System")
 # -------------------------------------------------------------------
 # BIG INFO CARD
 # -------------------------------------------------------------------
-st.markdown("""
-<div class='info-card'>
+st.markdown("""<div class='info-card'>
     <div class='info-title'>🧠 Sistem necə işləyir?</div>
 
     <div class='info-desc'>
@@ -140,8 +139,7 @@ st.markdown("""
             </span>
         </span>
     </div>
-</div>
-""", unsafe_allow_html=True)
+</div>""", unsafe_allow_html=True)
 
 # -------------------------------------------------------------------
 # LOAD MODELS (SAFE CACHE)

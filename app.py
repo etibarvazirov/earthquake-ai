@@ -5,6 +5,18 @@ import time
 from tensorflow.keras.models import load_model
 from quake_generator import generate_signal
 
+import streamlit as st
+
+hide_streamlit_style = """
+    <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+
 # ---------------------------------------------------------------
 # PAGE CONFIG
 # ---------------------------------------------------------------
